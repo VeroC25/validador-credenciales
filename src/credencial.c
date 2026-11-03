@@ -4,14 +4,38 @@
 
 int cred_formato_valido(const char *uid)
 {
-    (void)uid;
-    return 0;
+    size_t i;
+
+    /* Rechazar credenciales nulas o con longitud incorrecta. */
+    if (uid == NULL || strlen(uid) != CRED_LONGITUD) {
+        return 0;
+    }
+
+    /* Comprobar que todos los caracteres sean dígitos. */
+    for (i = 0; i < CRED_LONGITUD; i++) {
+        if (uid[i] < '0' || uid[i] > '9') {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 int cred_checksum(const char *uid)
 {
-    (void)uid;
-    return -1;
+    int suma = 0;
+
+    /* Evitar calcular el checksum de una credencial inválida. */
+    if (!cred_formato_valido(uid)) {
+        return -1;
+    }
+
+    /* Calcular la suma de los dígitos, excluyendo el último. */
+    for (size_t i = 0; i < CRED_LONGITUD - 1; i++) {
+        suma += uid[i] - '0';
+    }
+
+    return suma % 10;
 }
 
 cred_resultado_t cred_autorizar(const char *uid,
