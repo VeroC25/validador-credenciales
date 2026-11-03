@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define CRED_LONGITUD   8u
+#define CRED_LONGITUD   6u
 #define CRED_MAX_PERMIT 16u
 
 typedef enum {
