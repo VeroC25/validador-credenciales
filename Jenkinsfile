@@ -26,12 +26,20 @@ pipeline {
                 sh "make clean"
             }
         }
+        
 
         stage("Compilar") {
             steps {
                 sh "make all VERSION=${VERSION}"
             }
         }
+        stage("Analizar") {
+             steps {
+                 // Ejecutar el análisis estático antes de las pruebas unitarias.
+                 sh "make analyze"
+             }
+        }
+
 
         stage("Probar") {
             steps {
