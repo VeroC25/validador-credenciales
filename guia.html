@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de laboratorio — CI/CD con Jenkins · TEC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#335061; --cyan:#6FA8BF; --slate:#4A6C7D;
+  --mist:#E8F0F4; --warn:#C8922A; --warnbg:#FDF4E3;
+  --ink:#2B3338; --ink2:#5A6873; --line:#D8E0E5;
+  --bg:#FFFFFF; --panel:#F7F9FA; --code:#F4F7F8;
+  --ok:#3E7D5A; --okbg:#E8F3ED;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --blue:#8FBFD4; --cyan:#6FA8BF; --slate:#A9C4D1;
+    --mist:#1B2C36; --warn:#D9A648; --warnbg:#2B2416;
+    --ink:#DDE5EA; --ink2:#9FAEB8; --line:#2C3A44;
+    --bg:#131A1F; --panel:#182126; --code:#1A242B;
+    --ok:#7FBF9B; --okbg:#182B22;
+  }
+}
+:root[data-theme="dark"]{
+  --blue:#8FBFD4; --cyan:#6FA8BF; --slate:#A9C4D1;
+  --mist:#1B2C36; --warn:#D9A648; --warnbg:#2B2416;
+  --ink:#DDE5EA; --ink2:#9FAEB8; --line:#2C3A44;
+  --bg:#131A1F; --panel:#182126; --code:#1A242B;
+  --ok:#7FBF9B; --okbg:#182B22;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:20px}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+
+.shell{display:flex; max-width:1320px; margin:0 auto}
+nav{
+  width:250px; flex:0 0 250px; padding:26px 14px 60px 20px;
+  position:sticky; top:0; align-self:flex-start; max-height:100vh;
+  overflow-y:auto; border-right:1px solid var(--line);
+}
+nav .navtitle{
+  font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink2); font-weight:600; margin:0 0 12px 8px;
+}
+nav a{
+  display:block; padding:5px 9px; margin-bottom:1px; border-radius:5px;
+  color:var(--ink2); text-decoration:none; font-size:13.5px;
+  border-left:2px solid transparent; transition:.12s;
+}
+nav a:hover{background:var(--panel); color:var(--ink)}
+nav a.active{color:var(--blue); font-weight:600; border-left-color:var(--cyan); background:var(--panel)}
+nav a.sub{padding-left:22px; font-size:13px}
+
+main{flex:1; min-width:0; padding:26px 30px 90px; max-width:980px}
+
+@media (max-width:900px){
+  .shell{flex-direction:column}
+  nav{width:auto; flex:none; position:static; max-height:none;
+      border-right:none; border-bottom:1px solid var(--line); padding:16px 18px}
+  nav a{display:inline-block; margin-right:4px; border-left:none; border-bottom:2px solid transparent}
+  nav a.active{border-left:none; border-bottom-color:var(--cyan)}
+  nav a.sub{display:none}
+  main{padding:20px 18px 70px}
+}
+
+.brand{border-bottom:3px solid var(--cyan); padding-bottom:16px; margin-bottom:22px}
+.brand h1{font-size:26px; line-height:1.25; margin:0 0 8px; color:var(--blue); font-weight:700}
+.brand .inst{font-size:13px; color:var(--ink2); line-height:1.5}
+.brand .lead{margin-top:14px; font-size:14.5px; color:var(--ink)}
+
+h2{font-size:19px; color:var(--blue); font-weight:700;
+   margin:38px 0 4px; padding-bottom:6px; border-bottom:1px solid var(--line)}
+h3{font-size:15.5px; color:var(--blue); font-weight:600; margin:22px 0 6px}
+h4{font-size:14px; color:var(--ink); font-weight:600; margin:16px 0 4px}
+p{margin:10px 0}
+strong{font-weight:600}
+code{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+     font-size:.885em; background:var(--code); padding:1.5px 5px;
+     border-radius:4px; border:1px solid var(--line)}
+
+.stephead{display:flex; align-items:baseline; gap:14px;
+  margin:44px 0 6px; padding-bottom:8px; border-bottom:2px solid var(--cyan)}
+.stephead .n{font-size:34px; font-weight:700; color:var(--cyan);
+  line-height:1; min-width:42px; font-variant-numeric:tabular-nums}
+.stephead .t{font-size:19px; font-weight:700; color:var(--blue); flex:1}
+.stephead .mins{font-size:12px; color:var(--ink2); white-space:nowrap;
+  background:var(--panel); padding:3px 9px; border-radius:11px; border:1px solid var(--line)}
+
+.cw{margin:14px 0; border:1px solid var(--line); border-radius:7px; overflow:hidden; background:var(--code)}
+.cbar{display:flex; align-items:center; gap:8px; padding:5px 9px;
+  background:var(--panel); border-bottom:1px solid var(--line)}
+.lang{font-family:"JetBrains Mono",monospace; font-size:10.5px;
+  color:var(--ink2); text-transform:uppercase; letter-spacing:.07em; flex:1}
+.cp{font:inherit; font-size:11.5px; font-weight:500;
+  padding:3px 10px; border-radius:5px; cursor:pointer;
+  background:var(--bg); color:var(--ink2);
+  border:1px solid var(--line); transition:.12s; white-space:nowrap}
+.cp:hover{color:var(--blue); border-color:var(--cyan)}
+.cp.ok{background:var(--okbg); color:var(--ok); border-color:var(--ok)}
+pre{margin:0; padding:12px 14px; overflow-x:auto;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  font-size:12.8px; line-height:1.58; color:var(--ink)}
+pre .cm{color:var(--ink2); font-style:italic}
+pre .ou{color:var(--slate)}
+
+.box{margin:16px 0; border-radius:7px; padding:12px 15px;
+  border:1px solid; border-left-width:4px; font-size:14px}
+.box .bt{font-size:11px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; margin-bottom:6px}
+.box p:first-of-type{margin-top:0}
+.box p:last-child{margin-bottom:0}
+.nota{background:var(--mist); border-color:var(--cyan)}
+.nota .bt{color:var(--blue)}
+.adv{background:var(--warnbg); border-color:var(--warn)}
+.adv .bt{color:var(--warn)}
+.rol{background:var(--panel); border-color:var(--blue)}
+.rol .bt{color:var(--blue)}
+
+.tag{display:inline-block; font-size:11px; font-weight:700;
+  padding:1px 8px; border-radius:10px; vertical-align:middle;
+  margin-right:6px; letter-spacing:.04em}
+.tag-a{background:var(--mist); color:var(--blue); border:1px solid var(--cyan)}
+.tag-b{background:var(--warnbg); color:var(--warn); border:1px solid var(--warn)}
+
+.tw{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:440px}
+th{text-align:left; padding:8px 11px; border-bottom:2px solid var(--blue);
+  color:var(--blue); font-weight:600; font-size:12.5px}
+td{padding:8px 11px; border-bottom:1px solid var(--line); vertical-align:top}
+tr:last-child td{border-bottom:none}
+
+.chk{display:flex; align-items:flex-start; gap:10px; padding:6px 0; font-size:14px}
+.chk input{margin:4px 0 0; width:15px; height:15px; flex:0 0 auto;
+  accent-color:var(--cyan); cursor:pointer}
+.chk label{cursor:pointer; flex:1}
+.chk input:checked + label{color:var(--ink2); text-decoration:line-through}
+.prog{font-size:12px; color:var(--ink2); margin:10px 0 4px;
+  padding:6px 11px; background:var(--panel); border-radius:5px;
+  border:1px solid var(--line); display:inline-block}
+
+#toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(14px);
+  background:var(--blue); color:#fff; padding:8px 18px; border-radius:20px;
+  font-size:13px; opacity:0; pointer-events:none; transition:.22s; z-index:99}
+#toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+
+#theme{position:fixed; top:14px; right:16px; z-index:50;
+  background:var(--panel); border:1px solid var(--line); color:var(--ink2);
+  border-radius:16px; padding:5px 12px; font:inherit; font-size:12px; cursor:pointer}
+#theme:hover{color:var(--blue); border-color:var(--cyan)}
+
+footer{margin-top:50px; padding-top:18px; border-top:1px solid var(--line);
+  font-size:12.5px; color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<button id="theme">Tema</button>
+
+<div class="shell">
+
+<nav>
+  <p class="navtitle">Contenido</p>
+  <a href="#inicio">Antes de empezar</a>
+  <a href="#p0" class="sub">0 · Preparar el sistema</a>
+  <a href="#p1" class="sub">1 · Descargar el material</a>
+  <a href="#p2" class="sub">2 · Levantar Jenkins</a>
+  <a href="#p3" class="sub">3 · Repositorio de la pareja</a>
+  <a href="#p4" class="sub">4 · Conectar Jenkins</a>
+  <a href="#p5" class="sub">5 · Ronda 1 — ramas</a>
+  <a href="#p6" class="sub">6 · Pull request</a>
+  <a href="#p7" class="sub">7 · El choque</a>
+  <a href="#p8" class="sub">8 · Ronda 2</a>
+  <a href="#p9" class="sub">9 · Modificar el pipeline</a>
+  <a href="#p10" class="sub">10 · Rómpalo a propósito</a>
+  <a href="#salida">Verificación de salida</a>
+  <a href="#anexoa">A · Especificación</a>
+  <a href="#anexob">B · Infraestructura</a>
+  <a href="#anexoc">C · Problemas</a>
+</nav>
+
+<main>
+
+<div class="brand" id="inicio">
+  <h1>Guía de laboratorio — Construya su primer pipeline de CI/CD</h1>
+  <p class="inst">
+    Tecnológico de Costa Rica · Escuela de Ingeniería Electrónica · Taller de Sistemas Embebidos<br>
+    Mini-taller: Integración y entrega continua de software embebido · Caso Jenkins
+  </p>
+  <p class="lead">
+    Todos los comandos están verificados sobre WSL2 con Ubuntu 24.04, Docker Engine 29 y
+    Jenkins LTS. El trabajo se realiza <strong>en parejas</strong>: cada integrante ejecuta
+    su propio Jenkins, pero ambos publican al mismo repositorio. Esa es exactamente la
+    situación que la integración continua existe para resolver.
+  </p>
+</div>
+
+<h2>Antes de empezar</h2>
+
+<h3>Convenciones</h3>
+<div class="tw"><table>
+<tr><td style="width:60px"><code>$</code></td><td>lo escribe usted en la terminal. No copie el símbolo.</td></tr>
+<tr><td><code>#</code></td><td>comentario explicativo. No lo escriba.</td></tr>
+<tr><td><code>&gt;</code></td><td>salida esperada del comando.</td></tr>
+</table></div>
+
+<p>
+Todo el trabajo vive en <code>~/validador-ci</code>. Los integrantes de la pareja se
+identifican como <span class="tag tag-a">A</span> y <span class="tag tag-b">B</span>;
+decidan ahora quién es quién.
+</p>
+
+<p style="font-size:13.5px; color:var(--ink2)">
+Cada bloque tiene dos botones. <strong>Copiar</strong> lleva el bloque completo,
+comentarios incluidos. <strong>Solo comandos</strong> descarta comentarios y salidas
+esperadas: es el que conviene para pegar directo en la terminal.
+</p>
+
+<h3>Qué necesita su máquina</h3>
+<div class="tw"><table>
+<tr><th style="width:150px">Requisito</th><th>Detalle</th></tr>
+<tr><td>Sistema</td><td>WSL2 con Ubuntu 22.04 o superior, o Linux nativo. También sirve macOS con Docker Desktop</td></tr>
+<tr><td>Docker</td><td>Docker Engine 24 o superior con Compose v2</td></tr>
+<tr><td>Git</td><td>Cualquier versión reciente</td></tr>
+<tr><td>Compilador</td><td><code>gcc</code> y <code>make</code> en el anfitrión, para verificar antes de publicar</td></tr>
+<tr><td>Cuenta de GitHub</td><td>Con un <strong>token de acceso personal tipo <em>classic</em></strong> y alcance <code>repo</code> ya generado</td></tr>
+<tr><td>Puerto 8080</td><td>Libre. Si tiene otro Jenkins corriendo, deténgalo</td></tr>
+<tr><td>Disco</td><td>3 GB libres para la imagen del contenedor</td></tr>
+</table></div>
+
+<div class="box adv">
+  <div class="bt">Advertencia — genere el token antes de la sesión</div>
+  <p>
+    GitHub dejó de aceptar contraseñas para operaciones de Git en 2021. Necesita un token
+    de acceso personal, y generarlo en clase consume varios minutos por persona.
+  </p>
+  <p>
+    Vaya a <em>Settings</em> → <em>Developer settings</em> → <em>Personal access tokens</em>
+    → <strong>Tokens (classic)</strong> → <em>Generate new token</em>, marque el alcance
+    <code>repo</code> y guárdelo: solo se muestra una vez.
+  </p>
+</div>
+
+<!-- ============ PASO 0 ============ -->
+<div class="stephead" id="p0">
+  <span class="n">0</span>
+  <span class="t">Prepare el sistema anfitrión</span>
+  <span class="mins">8 min</span>
+</div>
+
+<h3>Verificación rápida — hágala antes que nada</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="0">Copiar</button>
+<button class="cp clean" data-i="0">Solo comandos</button></div>
+<pre>lsb_release -d            <span class="cm"># distribucion</span>
+docker --version          <span class="cm"># 24 o superior</span>
+docker compose version    <span class="cm"># debe decir v2.x</span>
+git --version
+gcc --version | head -1
+make --version | head -1
+nano --version | head -1
+cppcheck --version        <span class="cm"># se usa en el paso 9</span>
+df -h $HOME               <span class="cm"># al menos 3 GB libres</span>
+ss -tlnp | grep 8080      <span class="cm"># no debe devolver nada</span></pre></div>
+
+<p>Si todos responden y el puerto 8080 está libre, salte al paso 1.</p>
+
+<h3>Si falta algo</h3>
+<p>Herramientas de compilación, control de versiones y el editor:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="1">Copiar</button>
+<button class="cp clean" data-i="1">Solo comandos</button></div>
+<pre>sudo apt update
+sudo apt install -y build-essential make git curl zip unzip nano cppcheck</pre></div>
+
+<p>Docker Engine con Compose v2, desde el repositorio oficial:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="2">Copiar</button>
+<button class="cp clean" data-i="2">Solo comandos</button></div>
+<pre>sudo apt install -y ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) \
+signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(. /etc/os-release &amp;&amp; echo $VERSION_CODENAME) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io \
+                    docker-buildx-plugin docker-compose-plugin</pre></div>
+
+<p>Para no anteponer <code>sudo</code> a cada comando de Docker:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="3">Copiar</button>
+<button class="cp clean" data-i="3">Solo comandos</button></div>
+<pre>sudo usermod -aG docker $USER
+newgrp docker
+docker run --rm hello-world    <span class="cm"># debe imprimir un saludo</span></pre></div>
+
+<h3>Cómo se edita un archivo en esta guía</h3>
+<p>
+Cada vez que la guía diga «abra tal archivo», use <code>nano</code>. Se maneja con tres
+teclas y no requiere aprender nada:
+</p>
+
+<div class="tw"><table>
+<tr><th style="width:170px">Para</th><th>Teclas</th></tr>
+<tr><td>Guardar</td><td><code>Ctrl</code> + <code>O</code>, después <code>Enter</code></td></tr>
+<tr><td>Salir</td><td><code>Ctrl</code> + <code>X</code></td></tr>
+<tr><td>Buscar texto</td><td><code>Ctrl</code> + <code>W</code>, escriba, <code>Enter</code></td></tr>
+<tr><td>Cortar la línea actual</td><td><code>Ctrl</code> + <code>K</code></td></tr>
+<tr><td>Pegar</td><td><code>Ctrl</code> + <code>U</code></td></tr>
+<tr><td>Descartar cambios y salir</td><td><code>Ctrl</code> + <code>X</code>, después <code>N</code></td></tr>
+</table></div>
+
+<p>Comandos que va a usar para ver archivos sin modificarlos:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="4">Copiar</button>
+<button class="cp clean" data-i="4">Solo comandos</button></div>
+<pre>cat ARCHIVO           <span class="cm"># muestra el contenido completo</span>
+less ARCHIVO          <span class="cm"># lo muestra pagina por pagina; salga con q</span>
+ls -R                 <span class="cm"># lista carpetas y subcarpetas</span>
+grep -n "TEXTO" ARCHIVO   <span class="cm"># busca y muestra el numero de linea</span></pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — si prefiere Visual Studio Code</div>
+  <p>
+    Con la extensión de WSL instalada, desde la carpeta del proyecto ejecute
+    <code>code .</code> y se abre el editor gráfico sobre esos archivos. Todo lo demás de
+    la guía funciona igual.
+  </p>
+</div>
+
+<div class="box adv">
+  <div class="bt">Advertencia — en WSL2 el servicio no arranca solo</div>
+  <p>
+    Si <code>docker ps</code> responde <code>Cannot connect to the Docker daemon</code>,
+    el servicio está detenido. Arránquelo con <code>sudo service docker start</code>.
+  </p>
+  <p>
+    Si usa <strong>Docker Desktop</strong> en Windows, no instale Docker Engine dentro de
+    WSL: active la integración desde <em>Settings</em> → <em>Resources</em> →
+    <em>WSL integration</em>.
+  </p>
+</div>
+
+<!-- ============ PASO 1 ============ -->
+<div class="stephead" id="p1">
+  <span class="n">1</span>
+  <span class="t">Descargue el material y conózcalo</span>
+  <span class="mins">7 min</span>
+</div>
+
+<p>
+El material está en el repositorio del expositor, en la carpeta
+<code>taller-estudiantes</code>. La vía más simple es clonarlo desde la terminal y
+quedarse solo con esa carpeta:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · ambos</span>
+<button class="cp" data-i="5">Copiar</button>
+<button class="cp clean" data-i="5">Solo comandos</button></div>
+<pre>cd ~
+git clone https://github.com/Daniiell03/Taller-Jenkins.git material-taller
+mkdir -p ~/validador-ci
+cp -r ~/material-taller/taller-estudiantes/. ~/validador-ci/
+rm -rf ~/material-taller
+cd ~/validador-ci
+ls -a</pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — el punto final del <code>cp</code> no sobra</div>
+  <p>
+    <code>cp -r origen/. destino/</code> copia el contenido incluyendo archivos ocultos,
+    como <code>.gitignore</code>. Sin ese punto el archivo se queda atrás y su primer
+    <em>commit</em> incluiría la carpeta <code>build/</code>.
+  </p>
+</div>
+
+<h3>Alternativa: desde el ZIP descargado en Windows</h3>
+<p>
+Si prefiere <em>Code</em> → <em>Download ZIP</em>, WSL monta el disco de Windows en
+<code>/mnt/c</code>. Sustituya <code>SU_USUARIO</code> por el suyo:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="6">Copiar</button>
+<button class="cp clean" data-i="6">Solo comandos</button></div>
+<pre>ls /mnt/c/Users/                 <span class="cm"># averigue su nombre de usuario</span>
+cd ~
+cp /mnt/c/Users/SU_USUARIO/Downloads/Taller-Jenkins-main.zip .
+unzip -q Taller-Jenkins-main.zip
+mkdir -p ~/validador-ci
+cp -r Taller-Jenkins-main/taller-estudiantes/. ~/validador-ci/
+rm -rf Taller-Jenkins-main.zip Taller-Jenkins-main
+cd ~/validador-ci
+ls -a</pre></div>
+
+<h3>Explore lo que recibió</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="7">Copiar</button>
+<button class="cp clean" data-i="7">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+ls -R                      <span class="cm"># estructura completa</span>
+cat src/credencial.h       <span class="cm"># el contrato: que debe hacer cada funcion</span>
+cat src/credencial.c       <span class="cm"># el esqueleto vacio que usted completa</span>
+cat tests/test_credencial.c  <span class="cm"># la prueba de ejemplo</span>
+cat Jenkinsfile            <span class="cm"># la definicion del pipeline</span>
+cat docker/Dockerfile      <span class="cm"># el entorno de construccion</span></pre></div>
+
+<div class="tw"><table>
+<tr><th style="width:210px">Archivo</th><th>Qué es</th><th style="width:130px">¿Lo modifica?</th></tr>
+<tr><td><code>src/credencial.h</code></td><td>Contrato: constantes, tipos y prototipos</td><td>Solo en el paso 7</td></tr>
+<tr><td><code>src/credencial.c</code></td><td><strong>Esqueleto vacío: aquí trabaja</strong></td><td>Sí</td></tr>
+<tr><td><code>src/main.c</code></td><td>Programa de demostración por consola</td><td>Opcional</td></tr>
+<tr><td><code>tests/test_credencial.c</code></td><td><strong>Pruebas: aquí trabaja</strong></td><td>Sí</td></tr>
+<tr><td><code>tests/minitest.h</code></td><td>Marco de pruebas que emite JUnit XML</td><td>No</td></tr>
+<tr><td><code>Makefile</code></td><td>Objetivos de construcción</td><td>No</td></tr>
+<tr><td><code>Jenkinsfile</code></td><td>Definición del pipeline</td><td>Sí, en el paso 9</td></tr>
+<tr><td><code>docker/</code></td><td>Dockerfile, compose y lista de complementos</td><td>No</td></tr>
+</table></div>
+
+<h3>Compruebe el estado inicial</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="8">Copiar</button>
+<button class="cp clean" data-i="8">Solo comandos</button></div>
+<pre>make                  <span class="cm"># lista los objetivos disponibles</span>
+make clean
+make test             <span class="cm"># debe FALLAR: es lo esperado</span></pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">salida esperada</span></div>
+<pre><span class="ou">&gt; [ FALLA ] test_formato_acepta_ocho_digitos</span>
+<span class="ou">&gt; Resumen: 1 pruebas, 1 fallas</span>
+<span class="ou">&gt; make: *** [Makefile:29: test] Error 1</span></pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — que falle es correcto</div>
+  <p>
+    Las tres funciones de <code>credencial.c</code> existen pero devuelven valores fijos:
+    compilan, pero no hacen nada. Su trabajo consiste en completarlas.
+  </p>
+  <p>
+    Los <code>(void)uid;</code> que verá silencian la advertencia de parámetro sin usar.
+    El proyecto compila con <code>-Werror</code>: cualquier advertencia rompe el build.
+    Puede borrarlos en cuanto empiece a usar el parámetro.
+  </p>
+</div>
+
+<!-- ============ PASO 2 ============ -->
+<div class="stephead" id="p2">
+  <span class="n">2</span>
+  <span class="t">Levante Jenkins en un contenedor</span>
+  <span class="mins">10 min</span>
+</div>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · ambos</span>
+<button class="cp" data-i="9">Copiar</button>
+<button class="cp clean" data-i="9">Solo comandos</button></div>
+<pre>cd ~/validador-ci/docker
+DOCKER_BUILDKIT=0 docker build -t jenkins-validador:v1 .
+docker compose up -d --no-build
+docker compose ps</pre></div>
+
+<p>La construcción tarda unos minutos la primera vez.</p>
+
+<div class="box adv">
+  <div class="bt">Advertencia — error conocido en WSL2</div>
+  <p>
+    Si <code>docker build</code> falla con
+    <code>bind source path does not exist: /usr/lib/wsl</code>, es BuildKit intentando
+    montar una ruta que no existe en su WSL. Por eso el comando lleva
+    <code>DOCKER_BUILDKIT=0</code> delante: usa el constructor clásico y evita el problema.
+  </p>
+</div>
+
+<h3>Por qué hace falta un Dockerfile propio</h3>
+<p>Ábralo y mire las líneas del <code>apt-get install</code>:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="10">Copiar</button></div>
+<pre>cat ~/validador-ci/docker/Dockerfile</pre></div>
+
+<p>
+La imagen oficial de Jenkins incluye Java y el servidor, pero <strong>no incluye
+compilador de C</strong>. Si el pipeline va a ejecutar <code>make</code>, el entorno de
+construcción tiene que existir dentro de la imagen. Compruébelo:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="11">Copiar</button>
+<button class="cp clean" data-i="11">Solo comandos</button></div>
+<pre>docker exec jenkins-validador bash -c \
+  "gcc --version | head -1; make --version | head -1; cppcheck --version"
+<span class="ou">&gt; gcc (Debian 14.2.0-19) 14.2.0</span>
+<span class="ou">&gt; GNU Make 4.4.1</span>
+<span class="ou">&gt; Cppcheck 2.17.1</span></pre></div>
+
+<h3>Desbloquee Jenkins</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="12">Copiar</button>
+<button class="cp clean" data-i="12">Solo comandos</button></div>
+<pre>docker exec jenkins-validador \
+    cat /var/jenkins_home/secrets/initialAdminPassword</pre></div>
+
+<p>Abra el navegador en <code>http://localhost:8080</code>. Desde WSL puede lanzarlo así:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="13">Copiar</button></div>
+<pre>explorer.exe "http://localhost:8080"</pre></div>
+
+<p>En el asistente:</p>
+<ol>
+  <li>Pegue la clave que imprimió el comando anterior.</li>
+  <li>Elija <strong>Select plugins to install</strong> y luego <strong>None</strong>:
+      ya vienen precargados desde el <code>Dockerfile</code>.</li>
+  <li>Cree su usuario administrador. <strong>Anote sus credenciales.</strong></li>
+  <li>Deje la URL por defecto y guarde.</li>
+</ol>
+
+<div class="box nota">
+  <div class="bt">Nota — la configuración no se pierde</div>
+  <p>
+    El <code>docker-compose.yml</code> persiste <code>/var/jenkins_home</code> en un
+    volumen nombrado. Puede detener el contenedor con <code>docker compose down</code> y
+    volver a levantarlo sin perder usuario, trabajos ni historial.
+  </p>
+</div>
+
+<!-- ============ PASO 3 ============ -->
+<div class="stephead" id="p3">
+  <span class="n">3</span>
+  <span class="t">Cree el repositorio de la pareja</span>
+  <span class="mins">8 min</span>
+</div>
+
+<div class="box rol">
+  <div class="bt">Roles en este paso</div>
+  <p>
+    <span class="tag tag-a">A</span> crea el repositorio y hace el primer envío.
+    <span class="tag tag-b">B</span> espera la invitación como colaborador.
+  </p>
+</div>
+
+<p>
+<span class="tag tag-a">A</span> entra a <code>github.com/new</code> y crea un repositorio
+llamado <code>validador-credenciales</code>, <strong>público</strong>, y
+<strong>sin</strong> README ni <code>.gitignore</code>. Después, en la terminal:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante A</span>
+<button class="cp" data-i="14">Copiar</button>
+<button class="cp clean" data-i="14">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git init
+git branch -M main
+git config user.name  "Su Nombre"
+git config user.email "su-correo@ejemplo.com"
+git config pull.rebase true
+git add .
+git status --short          <span class="cm"># no debe aparecer build/</span>
+git commit -m "Material inicial del taller"
+git remote add origin https://github.com/USUARIO-A/validador-credenciales.git
+git push -u origin main</pre></div>
+
+<p>
+Cuando pida contraseña, pegue el <strong>token</strong>, no su contraseña de GitHub. La
+terminal no muestra nada mientras lo pega: es normal.
+</p>
+
+<p>
+<span class="tag tag-a">A</span> agrega a <span class="tag tag-b">B</span> como
+colaborador en <em>Settings</em> → <em>Collaborators</em> →
+<em>Add people</em>. <span class="tag tag-b">B</span> acepta la invitación por correo y
+clona:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante B</span>
+<button class="cp" data-i="15">Copiar</button>
+<button class="cp clean" data-i="15">Solo comandos</button></div>
+<pre>cd ~
+rm -rf ~/validador-ci       <span class="cm"># descarte su copia sin historial</span>
+git clone https://github.com/USUARIO-A/validador-credenciales.git validador-ci
+cd validador-ci
+git config user.name  "Su Nombre"
+git config user.email "su-correo@ejemplo.com"
+git config pull.rebase true
+ls -a</pre></div>
+
+<div class="box adv">
+  <div class="bt">Advertencia — B pierde su copia local</div>
+  <p>
+    <span class="tag tag-b">B</span> descargó el material en el paso 1, pero esa copia no
+    tiene historial de Git ni conexión con el repositorio de la pareja. El
+    <code>rm -rf</code> la descarta y el <code>clone</code> trae la versión buena.
+  </p>
+  <p>
+    Si <span class="tag tag-b">B</span> ya había modificado algo, cópielo antes a otro
+    sitio: <code>cp -r ~/validador-ci ~/respaldo-b</code>.
+  </p>
+</div>
+
+<!-- ============ PASO 4 ============ -->
+<div class="stephead" id="p4">
+  <span class="n">4</span>
+  <span class="t">Conecte Jenkins al repositorio</span>
+  <span class="mins">7 min</span>
+</div>
+
+<p>Ambos integrantes hacen este paso, cada uno en su propio Jenkins.</p>
+
+<p>
+En <code>http://localhost:8080</code>: <em>Nueva Tarea</em> → escriba
+<code>validador-ci</code> → elija <strong>Pipeline</strong> → <em>OK</em>. Baje hasta la
+sección <em>Pipeline</em>, al final del formulario:
+</p>
+
+<div class="tw"><table>
+<tr><th style="width:190px">Campo</th><th>Valor</th></tr>
+<tr><td>Definition</td><td><code>Pipeline script from SCM</code></td></tr>
+<tr><td>SCM</td><td><code>Git</code></td></tr>
+<tr><td>Repository URL</td><td>la URL del repositorio de la pareja</td></tr>
+<tr><td>Credentials</td><td><code>- none -</code> (el repositorio es público)</td></tr>
+<tr><td>Branch Specifier</td><td><code>**/*</code></td></tr>
+<tr><td>Script Path</td><td><code>Jenkinsfile</code></td></tr>
+</table></div>
+
+<p>Guarde y pulse <strong>Construir ahora</strong>.</p>
+
+<div class="box adv">
+  <div class="bt">Advertencia — el comodín es <code>**/*</code>, no <code>**</code></div>
+  <p>
+    Con <code>**</code> a secas el trabajo no encuentra ninguna rama y el build sale en
+    rojo. El comodín hace falta porque a partir del paso 5 van a trabajar con ramas y
+    Jenkins debe construirlas todas, no solo <code>main</code>.
+  </p>
+</div>
+
+<h3>Qué debe ver</h3>
+<p>El build queda <strong>AMARILLO</strong> (inestable), no rojo ni verde:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">salida de consola</span></div>
+<pre><span class="ou">&gt; OK: binario en build/bin/validador-credenciales (version 0.1.1)</span>
+<span class="ou">&gt; [ FALLA ] test_formato_acepta_ocho_digitos</span>
+<span class="ou">&gt; Resumen: 1 pruebas, 1 fallas</span>
+<span class="ou">&gt; Setting overall build result to UNSTABLE</span>
+<span class="ou">&gt; Stage "Empaquetar" skipped due to when conditional</span>
+<span class="ou">&gt; Finished: UNSTABLE</span></pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — amarillo no es lo mismo que rojo</div>
+  <p><strong>Rojo (FAILURE)</strong>: el código no compiló. Está roto.</p>
+  <p><strong>Amarillo (UNSTABLE)</strong>: compiló, pero el comportamiento no es el
+     esperado. Una prueba falló.</p>
+  <p>
+    Note además que <em>Empaquetar</em> y <em>Entregar</em> se omitieron. Nadie lo decidió:
+    lo decidió la condición <code>when</code> del <code>Jenkinsfile</code>. No se empaqueta
+    código que no pasó las pruebas.
+  </p>
+</div>
+
+<h3>El pipeline se dispara solo</h3>
+<p>
+El <code>Jenkinsfile</code> incluye un bloque <code>triggers</code> que consulta el
+repositorio cada dos minutos. Después de esta primera ejecución manual, ya no necesita
+pulsar <em>Construir ahora</em>: basta con publicar y esperar. Lo reconocerá porque el
+registro empieza con <code>Started by an SCM change</code>.
+</p>
+
+<!-- ============ PASO 5 ============ -->
+<div class="stephead" id="p5">
+  <span class="n">5</span>
+  <span class="t">Ronda 1 — trabajo en ramas separadas</span>
+  <span class="mins">18 min</span>
+</div>
+
+<div class="box rol">
+  <div class="bt">Roles en este paso</div>
+  <p>
+    <span class="tag tag-a">A</span> implementa <code>cred_formato_valido</code> y
+    <code>cred_checksum</code> en <code>src/credencial.c</code>.<br>
+    <span class="tag tag-b">B</span> escribe las pruebas de esas dos funciones en
+    <code>tests/test_credencial.c</code>.
+  </p>
+  <p>
+    Cada uno trabaja en su propia rama y no toca el archivo del otro.
+  </p>
+</div>
+
+<h3><span class="tag tag-a">A</span> — implementar las funciones</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante A</span>
+<button class="cp" data-i="16">Copiar</button>
+<button class="cp clean" data-i="16">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+git checkout -b implementacion-formato
+nano src/credencial.c</pre></div>
+
+<p>
+Dentro de <code>nano</code>, <strong>reemplace</strong> las dos primeras funciones. Busque
+<code>cred_formato_valido</code> con <code>Ctrl</code>+<code>W</code>. Debe quedar así:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">c · reemplace estas dos funciones</span>
+<button class="cp" data-i="17">Copiar</button></div>
+<pre>int cred_formato_valido(const char *uid)
+{
+    size_t i;
+
+    if (uid == NULL) {
+        return 0;
+    }
+    if (strlen(uid) != CRED_LONGITUD) {
+        return 0;
+    }
+    for (i = 0u; i &lt; CRED_LONGITUD; ++i) {
+        if (uid[i] &lt; '0' || uid[i] &gt; '9') {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int cred_checksum(const char *uid)
+{
+    size_t i;
+    int suma = 0;
+
+    if (!cred_formato_valido(uid)) {
+        return -1;
+    }
+    for (i = 0u; i &lt; CRED_LONGITUD - 1u; ++i) {
+        suma += uid[i] - '0';
+    }
+    return suma % 10;
+}</pre></div>
+
+<p>
+Guarde con <code>Ctrl</code>+<code>O</code>, <code>Enter</code>, y salga con
+<code>Ctrl</code>+<code>X</code>. Verifique y publique:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante A</span>
+<button class="cp" data-i="18">Copiar</button>
+<button class="cp clean" data-i="18">Solo comandos</button></div>
+<pre>make clean &amp;&amp; make test     <span class="cm"># ahora la prueba de ejemplo pasa</span>
+git add src/credencial.c
+git commit -m "Implementa validacion de formato y checksum"
+git push -u origin implementacion-formato</pre></div>
+
+<h3><span class="tag tag-b">B</span> — escribir las pruebas</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante B</span>
+<button class="cp" data-i="19">Copiar</button>
+<button class="cp clean" data-i="19">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+git checkout -b pruebas-formato
+nano tests/test_credencial.c</pre></div>
+
+<p>
+Agregue estas funciones <strong>antes</strong> de <code>int main(void)</code>, y después
+registre cada una con <code>MT_PRUEBA</code> dentro de <code>main</code>:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">c · agregue antes de main()</span>
+<button class="cp" data-i="20">Copiar</button></div>
+<pre>static void test_formato_rechaza_corta(void)
+{
+    MT_ASSERT_EQ(cred_formato_valido("1234567"), 0);
+}
+
+static void test_formato_rechaza_larga(void)
+{
+    MT_ASSERT_EQ(cred_formato_valido("123456789"), 0);
+}
+
+static void test_formato_rechaza_letra(void)
+{
+    MT_ASSERT_EQ(cred_formato_valido("1234567A"), 0);
+}
+
+static void test_formato_rechaza_nulo(void)
+{
+    MT_ASSERT_EQ(cred_formato_valido(NULL), 0);
+}
+
+static void test_checksum_suma_modulo_diez(void)
+{
+    MT_ASSERT_EQ(cred_checksum("12345678"), 8);
+}
+
+static void test_checksum_suma_pequena(void)
+{
+    MT_ASSERT_EQ(cred_checksum("11111117"), 7);
+}
+
+static void test_checksum_rechaza_invalida(void)
+{
+    MT_ASSERT_EQ(cred_checksum("1234567A"), -1);
+}</pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">c · agregue dentro de main()</span>
+<button class="cp" data-i="21">Copiar</button></div>
+<pre>    MT_PRUEBA(test_formato_rechaza_corta);
+    MT_PRUEBA(test_formato_rechaza_larga);
+    MT_PRUEBA(test_formato_rechaza_letra);
+    MT_PRUEBA(test_formato_rechaza_nulo);
+    MT_PRUEBA(test_checksum_suma_modulo_diez);
+    MT_PRUEBA(test_checksum_suma_pequena);
+    MT_PRUEBA(test_checksum_rechaza_invalida);</pre></div>
+
+<div class="box adv">
+  <div class="bt">Advertencia — si olvida un <code>MT_PRUEBA</code></div>
+  <p>
+    Cada función de prueba que escriba debe registrarse dentro de <code>main()</code>.
+    Si falta alguna, el compilador no dice «falta registrar la prueba»: dice
+    <code>defined but not used</code> y, como el proyecto usa <code>-Werror</code>,
+    <strong>el build queda rojo</strong> en lugar de amarillo.
+  </p>
+  <p>Antes de publicar, cuente que los números coincidan:</p>
+</div>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="41">Copiar</button>
+<button class="cp clean" data-i="41">Solo comandos</button></div>
+<pre>grep -c "^static void test_" tests/test_credencial.c   <span class="cm"># funciones escritas</span>
+grep -c "MT_PRUEBA" tests/test_credencial.c            <span class="cm"># registros: debe dar igual</span></pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante B</span>
+<button class="cp" data-i="22">Copiar</button>
+<button class="cp clean" data-i="22">Solo comandos</button></div>
+<pre>make clean &amp;&amp; make test     <span class="cm"># fallan: A aun no fusiono su codigo</span>
+git add tests/test_credencial.c
+git commit -m "Agrega pruebas de formato y checksum"
+git push -u origin pruebas-formato</pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — que las pruebas de B fallen ahora es correcto</div>
+  <p>
+    <span class="tag tag-b">B</span> escribe pruebas contra funciones que todavía devuelven
+    valores fijos, porque el código de <span class="tag tag-a">A</span> vive en otra rama.
+    Ese es justamente el punto: las dos mitades se encuentran al integrarse, no antes.
+  </p>
+  <p>Su Jenkins va a construir ambas ramas y ambas van a quedar amarillas.</p>
+</div>
+
+<h3>Punto de verificación</h3>
+<div class="chk"><input type="checkbox" id="v1"><label for="v1">Ambas ramas existen en GitHub.</label></div>
+<div class="chk"><input type="checkbox" id="v2"><label for="v2">Ambos builds aparecen en Jenkins, con el nombre de la rama en la etapa <em>Preparar</em>.</label></div>
+<div class="chk"><input type="checkbox" id="v3"><label for="v3">Ninguno de los dos produjo artefacto.</label></div>
+
+<!-- ============ PASO 6 ============ -->
+<div class="stephead" id="p6">
+  <span class="n">6</span>
+  <span class="t">Pull request y revisión cruzada</span>
+  <span class="mins">10 min</span>
+</div>
+
+<p>En GitHub, cada uno abre un <em>pull request</em> de su rama hacia <code>main</code>:</p>
+
+<ol>
+  <li>Entre al repositorio. Aparece un aviso amarillo con su rama recién publicada.</li>
+  <li>Pulse <strong>Compare &amp; pull request</strong>.</li>
+  <li>Verifique que va de su rama hacia <code>main</code>.</li>
+  <li>En la descripción, explique en una o dos líneas qué hizo.</li>
+  <li>Pulse <strong>Create pull request</strong>. <em>No lo fusione todavía.</em></li>
+</ol>
+
+<p>
+Después <strong>intercambien</strong>: cada uno abre el PR del otro, va a la pestaña
+<em>Files changed</em> y lee el código del compañero. Pregunte lo que no entienda.
+</p>
+
+<p>
+Fusionen primero el de <span class="tag tag-a">A</span> con
+<strong>Merge pull request</strong> → <strong>Confirm merge</strong>, y después el de
+<span class="tag tag-b">B</span>.
+</p>
+
+<div class="box nota">
+  <div class="bt">Nota — observe el pipeline entre una fusión y la otra</div>
+  <p>
+    Tras fusionar el PR de <span class="tag tag-a">A</span>, <code>main</code> tiene la
+    implementación pero solo la prueba de ejemplo: el build queda <strong>verde</strong> y
+    produce artefacto.
+  </p>
+  <p>
+    Tras fusionar el de <span class="tag tag-b">B</span>, entran siete pruebas más. Si la
+    implementación es correcta, sigue verde. Si algo no coincide con la especificación del
+    <a href="#anexoa">Anexo A</a>, aparece en amarillo señalando exactamente qué prueba
+    falló.
+  </p>
+  <p>
+    <strong>Eso es integración continua.</strong> Dos personas trabajaron por separado y el
+    pipeline verificó la combinación en minutos.
+  </p>
+</div>
+
+<p>Actualicen su copia local:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · ambos</span>
+<button class="cp" data-i="23">Copiar</button>
+<button class="cp clean" data-i="23">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main
+git pull
+make clean &amp;&amp; make test      <span class="cm"># las 8 pruebas deben pasar</span></pre></div>
+
+<h3>Punto de verificación</h3>
+<div class="chk"><input type="checkbox" id="v4"><label for="v4"><code>main</code> está en verde con las 8 pruebas.</label></div>
+<div class="chk"><input type="checkbox" id="v5"><label for="v5">El build de <code>main</code> <strong>sí</strong> produjo artefacto: búsquelo en <em>Last Successful Artifacts</em>, en la página del proyecto, no en la de cada ejecución.</label></div>
+
+<!-- ============ PASO 7 ============ -->
+<div class="stephead" id="p7">
+  <span class="n">7</span>
+  <span class="t">El choque — conflicto de fusión</span>
+  <span class="mins">8 min</span>
+</div>
+
+<p>Este paso provoca un conflicto a propósito. Háganlo exactamente como se indica.</p>
+
+<h3><span class="tag tag-a">A</span></h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante A</span>
+<button class="cp" data-i="24">Copiar</button>
+<button class="cp clean" data-i="24">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+git checkout -b uid-largo
+sed -i 's/#define CRED_LONGITUD   8u/#define CRED_LONGITUD  10u/' src/credencial.h
+grep CRED_LONGITUD src/credencial.h    <span class="cm"># confirme el cambio</span>
+git commit -am "Amplia el UID a 10 digitos"
+git push -u origin uid-largo</pre></div>
+
+<h3><span class="tag tag-b">B</span></h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante B</span>
+<button class="cp" data-i="25">Copiar</button>
+<button class="cp clean" data-i="25">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+git checkout -b uid-corto
+sed -i 's/#define CRED_LONGITUD   8u/#define CRED_LONGITUD   6u/' src/credencial.h
+grep CRED_LONGITUD src/credencial.h    <span class="cm"># confirme el cambio</span>
+git commit -am "Reduce el UID a 6 digitos"
+git push -u origin uid-corto</pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — alternativa con editor</div>
+  <p>
+    El <code>sed</code> es un atajo. Si prefiere verlo, abra el archivo con
+    <code>nano src/credencial.h</code>, busque <code>CRED_LONGITUD</code> con
+    <code>Ctrl</code>+<code>W</code> y cambie el número a mano.
+  </p>
+</div>
+
+<p>
+Abran los dos pull requests. Fusionen el primero: entra sin problema. Al intentar el
+segundo, GitHub muestra <em>This branch has conflicts that must be resolved</em>.
+</p>
+
+<p>Resuélvanlo desde la web:</p>
+<ol>
+  <li>Pulse <strong>Resolve conflicts</strong>.</li>
+  <li>GitHub marca la zona en disputa con <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>,
+      <code>=======</code> y <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>.</li>
+  <li>Borre esas marcas y deje <strong>una sola</strong> línea con el valor acordado.</li>
+  <li><strong>Mark as resolved</strong> → <strong>Commit merge</strong>.</li>
+</ol>
+
+<div class="box adv">
+  <div class="bt">Advertencia — este paso es obligatorio</div>
+  <p>
+    Si el conflicto se resolvió dejando 10 o 6, <strong>todo lo que viene después va a
+    fallar</strong>: las pruebas de checksum dejan de cuadrar y parecerá que la
+    implementación está mal, cuando el problema es la constante.
+  </p>
+  <p>Restauren el valor a <code>8u</code> y publíquenlo antes de seguir.</p>
+</div>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · uno de los dos</span>
+<button class="cp" data-i="26">Copiar</button>
+<button class="cp clean" data-i="26">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+grep CRED_LONGITUD src/credencial.h    <span class="cm"># vea en cuanto quedo</span>
+sed -i 's/#define CRED_LONGITUD.*$/#define CRED_LONGITUD   8u/' src/credencial.h
+grep CRED_LONGITUD src/credencial.h    <span class="cm"># ahora debe decir 8u</span>
+make clean &amp;&amp; make test                <span class="cm"># las 8 pruebas deben pasar</span>
+git commit -am "Restaura la longitud del UID a 8 digitos"
+git push</pre></div>
+
+<p>El otro integrante actualiza su copia:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · el otro</span>
+<button class="cp" data-i="42">Copiar</button>
+<button class="cp clean" data-i="42">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+grep CRED_LONGITUD src/credencial.h
+make clean &amp;&amp; make test</pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — qué acaba de pasar</div>
+  <p>
+    Git no puede decidir cuál de las dos versiones es correcta, porque ambas son
+    sintácticamente válidas. Solo ustedes saben cuál refleja el requisito.
+  </p>
+  <p>
+    En un equipo real esto ocurre a diario. Cuanto más tiempo pasa una rama sin
+    integrarse, más grande y más difícil es el conflicto. De ahí el nombre: integración
+    <em>continua</em>.
+  </p>
+</div>
+
+<!-- ============ PASO 8 ============ -->
+<div class="stephead" id="p8">
+  <span class="n">8</span>
+  <span class="t">Ronda 2 — roles invertidos</span>
+  <span class="mins">15 min</span>
+</div>
+
+<div class="box rol">
+  <div class="bt">Roles en este paso</div>
+  <p>
+    <span class="tag tag-b">B</span> implementa <code>cred_autorizar</code>.<br>
+    <span class="tag tag-a">A</span> escribe las pruebas de <code>cred_autorizar</code>.
+  </p>
+</div>
+
+<h3><span class="tag tag-b">B</span> — implementar</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante B</span>
+<button class="cp" data-i="27">Copiar</button>
+<button class="cp clean" data-i="27">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+git checkout -b implementacion-autorizar
+nano src/credencial.c</pre></div>
+
+<p>Reemplace <code>cred_autorizar</code> por esto:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">c · reemplace cred_autorizar</span>
+<button class="cp" data-i="28">Copiar</button></div>
+<pre>cred_resultado_t cred_autorizar(const char *uid,
+                                const char *permitidas[],
+                                size_t n)
+{
+    size_t i;
+    int digito;
+
+    <span class="cm">/* 1. formato */</span>
+    if (!cred_formato_valido(uid)) {
+        return CRED_ERR_FORMATO;
+    }
+
+    <span class="cm">/* 2. checksum: el ultimo digito debe coincidir */</span>
+    digito = cred_checksum(uid);
+    if (digito &lt; 0 || uid[CRED_LONGITUD - 1u] - '0' != digito) {
+        return CRED_ERR_CHECKSUM;
+    }
+
+    <span class="cm">/* 3. lista de permitidas */</span>
+    if (permitidas == NULL) {
+        return CRED_ERR_NO_AUTORIZADA;
+    }
+    for (i = 0u; i &lt; n; ++i) {
+        if (permitidas[i] != NULL &amp;&amp; strcmp(uid, permitidas[i]) == 0) {
+            return CRED_OK;
+        }
+    }
+    return CRED_ERR_NO_AUTORIZADA;
+}</pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante B</span>
+<button class="cp" data-i="29">Copiar</button>
+<button class="cp clean" data-i="29">Solo comandos</button></div>
+<pre>make clean &amp;&amp; make all
+./build/bin/validador-credenciales     <span class="cm"># vea la tabla de resultados</span>
+make test
+git add src/credencial.c
+git commit -m "Implementa la autorizacion de credenciales"
+git push -u origin implementacion-autorizar</pre></div>
+
+<h3><span class="tag tag-a">A</span> — escribir las pruebas</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante A</span>
+<button class="cp" data-i="30">Copiar</button>
+<button class="cp clean" data-i="30">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+git checkout -b pruebas-autorizar
+nano tests/test_credencial.c</pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">c · agregue antes de main()</span>
+<button class="cp" data-i="31">Copiar</button></div>
+<pre>static const char *PERMITIDAS[] = {
+    "12345678",
+    "20250010"
+};
+
+static void test_autoriza_credencial_valida(void)
+{
+    MT_ASSERT_EQ(cred_autorizar("12345678", PERMITIDAS, 2), CRED_OK);
+}
+
+static void test_rechaza_formato_invalido(void)
+{
+    MT_ASSERT_EQ(cred_autorizar("1234567A", PERMITIDAS, 2),
+                 CRED_ERR_FORMATO);
+}
+
+static void test_rechaza_checksum_erroneo(void)
+{
+    MT_ASSERT_EQ(cred_autorizar("12345670", PERMITIDAS, 2),
+                 CRED_ERR_CHECKSUM);
+}
+
+static void test_rechaza_no_autorizada(void)
+{
+    MT_ASSERT_EQ(cred_autorizar("11111117", PERMITIDAS, 2),
+                 CRED_ERR_NO_AUTORIZADA);
+}
+
+static void test_formato_gana_al_orden(void)
+{
+    <span class="cm">/* mal formato Y ausente de la lista: gana el formato */</span>
+    MT_ASSERT_EQ(cred_autorizar("ABC", PERMITIDAS, 2),
+                 CRED_ERR_FORMATO);
+}
+
+static void test_lista_vacia_no_autoriza(void)
+{
+    MT_ASSERT_EQ(cred_autorizar("12345678", NULL, 0),
+                 CRED_ERR_NO_AUTORIZADA);
+}</pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">c · agregue dentro de main()</span>
+<button class="cp" data-i="32">Copiar</button></div>
+<pre>    MT_PRUEBA(test_autoriza_credencial_valida);
+    MT_PRUEBA(test_rechaza_formato_invalido);
+    MT_PRUEBA(test_rechaza_checksum_erroneo);
+    MT_PRUEBA(test_rechaza_no_autorizada);
+    MT_PRUEBA(test_formato_gana_al_orden);
+    MT_PRUEBA(test_lista_vacia_no_autoriza);</pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · integrante A</span>
+<button class="cp" data-i="33">Copiar</button>
+<button class="cp clean" data-i="33">Solo comandos</button></div>
+<pre>make clean &amp;&amp; make test     <span class="cm"># fallan: B aun no fusiono</span>
+git add tests/test_credencial.c
+git commit -m "Agrega pruebas de autorizacion"
+git push -u origin pruebas-autorizar</pre></div>
+
+<p>Abran los pull requests, revisen el del otro y fusionen: primero el de
+<span class="tag tag-b">B</span>, después el de <span class="tag tag-a">A</span>.</p>
+
+<!-- ============ PASO 9 ============ -->
+<div class="stephead" id="p9">
+  <span class="n">9</span>
+  <span class="t">Modifique el pipeline</span>
+  <span class="mins">10 min</span>
+</div>
+
+<p>Hasta ahora usaron un pipeline que les vino dado. Ahora lo van a modificar.</p>
+
+<p>
+El <code>Makefile</code> ya tiene un objetivo <code>analyze</code> que ejecuta
+<code>cppcheck</code>, un analizador estático. Pruébenlo primero en local:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · uno de los dos</span>
+<button class="cp" data-i="34">Copiar</button>
+<button class="cp clean" data-i="34">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+make analyze
+git checkout -b pipeline-analisis
+nano Jenkinsfile</pre></div>
+
+<p>
+Busque <code>stage("Probar")</code> con <code>Ctrl</code>+<code>W</code> e inserte esta
+etapa <strong>justo antes</strong>:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">groovy · inserte antes de stage("Probar")</span>
+<button class="cp" data-i="35">Copiar</button></div>
+<pre>        stage("Analizar") {
+            steps {
+                sh "make analyze"
+            }
+        }
+</pre></div>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="36">Copiar</button>
+<button class="cp clean" data-i="36">Solo comandos</button></div>
+<pre>grep -n "stage(" Jenkinsfile     <span class="cm"># confirme el orden de las etapas</span>
+git add Jenkinsfile
+git commit -m "Agrega etapa de analisis estatico al pipeline"
+git push -u origin pipeline-analisis</pre></div>
+
+<p>
+Abran el pull request, revísenlo y fusiónenlo. Observen en Jenkins: la vista de etapas
+ahora tiene una columna más.
+</p>
+
+<div class="box nota">
+  <div class="bt">Nota — esto es Pipeline as Code</div>
+  <p>
+    Acaban de cambiar el proceso de construcción con un <em>commit</em>. Quedó revisado por
+    su compañero, registrado en el historial y es reversible.
+  </p>
+  <p>
+    Si el pipeline estuviera configurado desde formularios de la interfaz web, ese cambio
+    no tendría autor, ni fecha, ni revisión, ni forma de deshacerse.
+  </p>
+  <p>
+    <strong>Desafío opcional:</strong> haga que <em>Analizar</em> solo se ejecute en
+    <code>main</code>, copiando el bloque <code>when</code> de <em>Empaquetar</em>.
+  </p>
+</div>
+
+<!-- ============ PASO 10 ============ -->
+<div class="stephead" id="p10">
+  <span class="n">10</span>
+  <span class="t">Rómpalo a propósito</span>
+  <span class="mins">6 min</span>
+</div>
+
+<p>Con <code>main</code> en verde y las 14 pruebas pasando, provoquen un fallo deliberado.</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash · uno de los dos</span>
+<button class="cp" data-i="37">Copiar</button>
+<button class="cp clean" data-i="37">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+git checkout main &amp;&amp; git pull
+git checkout -b experimento-roto
+sed -i 's/return suma % 10;/return suma % 9;/' src/credencial.c
+grep -n "suma %" src/credencial.c      <span class="cm"># confirme el cambio</span>
+make clean &amp;&amp; make test                <span class="cm"># vea cuantas caen</span>
+git commit -am "Experimento: cambia el modulo del checksum"
+git push -u origin experimento-roto</pre></div>
+
+<p>Observen el build de esa rama en Jenkins y anoten:</p>
+
+<div class="tw"><table>
+<tr><th style="width:300px">Pregunta</th><th>Su respuesta</th></tr>
+<tr><td>¿El build quedó rojo o amarillo?</td><td>&nbsp;</td></tr>
+<tr><td>¿Cuántas pruebas fallaron?</td><td>&nbsp;</td></tr>
+<tr><td>¿Se generó artefacto?</td><td>&nbsp;</td></tr>
+<tr><td>¿Cuánto tardó en enterarse?</td><td>&nbsp;</td></tr>
+</table></div>
+
+<p>Después, borren la rama sin fusionarla:</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="38">Copiar</button>
+<button class="cp clean" data-i="38">Solo comandos</button></div>
+<pre>git checkout main
+git push origin --delete experimento-roto
+git branch -D experimento-roto
+git branch -a                  <span class="cm"># confirme que ya no esta</span></pre></div>
+
+<div class="box nota">
+  <div class="bt">Nota — la red de seguridad</div>
+  <p>
+    Un cambio de un carácter, sintácticamente válido, alteró el comportamiento de un
+    sistema de control de acceso. Las pruebas lo detectaron y el pipeline impidió que se
+    produjera un artefacto entregable.
+  </p>
+  <p>
+    En software embebido eso importa más que en la web: un firmware defectuoso puede
+    llegar a miles de dispositivos que nadie va a actualizar en años.
+  </p>
+</div>
+
+<!-- ============ SALIDA ============ -->
+<h2 id="salida">Lista de verificación de salida</h2>
+
+<div class="prog" id="prog">0 de 12 completados</div>
+
+<div class="chk"><input type="checkbox" id="s1"><label for="s1">Instalé Docker y verifiqué que el puerto 8080 estaba libre.</label></div>
+<div class="chk"><input type="checkbox" id="s2"><label for="s2">Levanté Jenkins en un contenedor y entiendo por qué el <code>Dockerfile</code> instala un compilador.</label></div>
+<div class="chk"><input type="checkbox" id="s3"><label for="s3">Conecté Jenkins a un repositorio de GitHub mediante <em>Pipeline script from SCM</em>.</label></div>
+<div class="chk"><input type="checkbox" id="s4"><label for="s4">Vi un build amarillo y sé en qué se diferencia de uno rojo.</label></div>
+<div class="chk"><input type="checkbox" id="s5"><label for="s5">Trabajé en una rama propia y abrí un <em>pull request</em>.</label></div>
+<div class="chk"><input type="checkbox" id="s6"><label for="s6">Revisé el código de mi compañero antes de fusionarlo.</label></div>
+<div class="chk"><input type="checkbox" id="s7"><label for="s7">Comprobé que una rama de trabajo no genera artefacto y <code>main</code> sí.</label></div>
+<div class="chk"><input type="checkbox" id="s8"><label for="s8">Provoqué un conflicto de fusión y lo resolví de acuerdo con mi compañero.</label></div>
+<div class="chk"><input type="checkbox" id="s9"><label for="s9">Implementé funciones y escribí pruebas para otras.</label></div>
+<div class="chk"><input type="checkbox" id="s10"><label for="s10">Agregué una etapa al <code>Jenkinsfile</code> y la publiqué por <em>pull request</em>.</label></div>
+<div class="chk"><input type="checkbox" id="s11"><label for="s11">Rompí el build a propósito y observé la reacción del pipeline.</label></div>
+<div class="chk"><input type="checkbox" id="s12"><label for="s12">No borré <code>~/validador-ci</code>: es el punto de partida de la próxima sesión.</label></div>
+
+<!-- ============ ANEXO A ============ -->
+<h2 id="anexoa">Anexo A — Especificación de las funciones</h2>
+
+<p>
+Esta es la fuente de verdad. Ante cualquier duda sobre qué debe hacer una función, gana lo
+que diga este anexo.
+</p>
+
+<h3><code>int cred_formato_valido(const char *uid)</code></h3>
+<p>
+Verifica que la credencial tenga exactamente <code>CRED_LONGITUD</code> caracteres y que
+<strong>todos</strong> sean dígitos decimales.
+</p>
+
+<div class="tw"><table>
+<tr><th style="width:170px">Entrada</th><th>Retorno</th></tr>
+<tr><td><code>"12345678"</code></td><td><code>1</code></td></tr>
+<tr><td><code>"1234567"</code></td><td><code>0</code> — muy corta</td></tr>
+<tr><td><code>"123456789"</code></td><td><code>0</code> — muy larga</td></tr>
+<tr><td><code>"1234567A"</code></td><td><code>0</code> — contiene una letra</td></tr>
+<tr><td><code>""</code> · <code>NULL</code></td><td><code>0</code></td></tr>
+</table></div>
+
+<h3><code>int cred_checksum(const char *uid)</code></h3>
+<p>
+Suma los valores numéricos de los primeros <code>CRED_LONGITUD - 1</code> caracteres y
+devuelve esa suma <strong>módulo 10</strong>. Con <code>"12345678"</code>:
+1+2+3+4+5+6+7 = 28, y 28 mód 10 = 8. El octavo carácter <strong>no</strong> participa: es
+el dígito que se verifica.
+</p>
+
+<div class="tw"><table>
+<tr><th style="width:170px">Entrada</th><th>Retorno</th></tr>
+<tr><td><code>"12345678"</code></td><td><code>8</code> — suma 28</td></tr>
+<tr><td><code>"11111117"</code></td><td><code>7</code> — suma 7</td></tr>
+<tr><td><code>"1234567A"</code> · <code>NULL</code></td><td><code>-1</code></td></tr>
+</table></div>
+
+<h3><code>cred_resultado_t cred_autorizar(...)</code></h3>
+<p>
+Aplica tres verificaciones <strong>en este orden</strong> y devuelve el error de la primera
+que falle:
+</p>
+
+<div class="tw"><table>
+<tr><th style="width:40px">#</th><th style="width:300px">Verificación</th><th>Si falla, devuelve</th></tr>
+<tr><td>1</td><td>Formato válido</td><td><code>CRED_ERR_FORMATO</code></td></tr>
+<tr><td>2</td><td>El último dígito coincide con el checksum calculado</td><td><code>CRED_ERR_CHECKSUM</code></td></tr>
+<tr><td>3</td><td>El <code>uid</code> aparece en <code>permitidas</code></td><td><code>CRED_ERR_NO_AUTORIZADA</code></td></tr>
+</table></div>
+
+<p>Si las tres se cumplen, devuelve <code>CRED_OK</code>.</p>
+
+<div class="box nota">
+  <div class="bt">Nota — casos límite</div>
+  <p><code>uid == NULL</code> → <code>CRED_ERR_FORMATO</code>.</p>
+  <p>
+    <code>permitidas == NULL</code> o <code>n == 0</code> → ninguna credencial está
+    autorizada, de modo que una credencial bien formada y con checksum correcto devuelve
+    <code>CRED_ERR_NO_AUTORIZADA</code>, no <code>CRED_OK</code>.
+  </p>
+  <p>
+    Una credencial con formato inválido <em>y</em> ausente de la lista devuelve
+    <code>CRED_ERR_FORMATO</code>, porque esa verificación va primero.
+  </p>
+</div>
+
+<!-- ============ ANEXO B ============ -->
+<h2 id="anexob">Anexo B — La infraestructura</h2>
+
+<p>
+Estos archivos vienen dados y no necesita modificarlos. Puede verlos cuando quiera:
+</p>
+
+<div class="cw"><div class="cbar"><span class="lang">bash</span>
+<button class="cp" data-i="39">Copiar</button>
+<button class="cp clean" data-i="39">Solo comandos</button></div>
+<pre>cd ~/validador-ci
+cat docker/Dockerfile           <span class="cm"># entorno de construccion</span>
+cat docker/docker-compose.yml   <span class="cm"># servicio y volumen persistente</span>
+cat docker/plugins.txt          <span class="cm"># complementos precargados</span>
+cat Makefile                    <span class="cm"># objetivos de construccion</span>
+cat Jenkinsfile                 <span class="cm"># definicion del pipeline</span></pre></div>
+
+<h3>El Dockerfile, que es el que importa</h3>
+
+<div class="cw"><div class="cbar"><span class="lang">dockerfile</span>
+<button class="cp" data-i="40">Copiar</button></div>
+<pre>FROM jenkins/jenkins:lts-jdk21
+
+USER root
+
+RUN apt-get update \
+ &amp;&amp; apt-get install -y --no-install-recommends \
+      build-essential \
+      make \
+      file \
+      git \
+      cppcheck \
+ &amp;&amp; rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_OPTS="-Duser.timezone=America/Costa_Rica"
+
+COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+
+USER jenkins</pre></div>
+
+<p>
+La imagen oficial trae Java y el servidor, pero no el compilador. Sin este
+<code>Dockerfile</code>, el pipeline fallaría con <code>make: command not found</code>.
+</p>
+
+<h3>Directivas del Jenkinsfile</h3>
+
+<div class="tw"><table>
+<tr><th style="width:170px">Directiva</th><th>Qué hace</th></tr>
+<tr><td><code>agent</code></td><td>Dónde se ejecuta el trabajo. Aquí es el propio controlador; en producción sería un nodo dedicado</td></tr>
+<tr><td><code>options</code></td><td>Políticas: tiempo límite, cuántos builds conservar, no ejecutar dos a la vez</td></tr>
+<tr><td><code>triggers</code></td><td>Consulta el repositorio cada dos minutos y lanza una ejecución si hay cambios</td></tr>
+<tr><td><code>environment</code></td><td>Define <code>VERSION</code> a partir del número de build: liga el artefacto a la ejecución</td></tr>
+<tr><td><code>catchError</code></td><td>Convierte una prueba fallida en build amarillo en lugar de rojo</td></tr>
+<tr><td><code>when</code></td><td>Omite una etapa si no se cumple la condición: es la política de calidad automatizada</td></tr>
+<tr><td><code>junit</code></td><td>Publica el informe XML en la pestaña <em>Test Result</em></td></tr>
+<tr><td><code>archiveArtifacts</code></td><td>Copia el paquete al controlador para que sobreviva a la limpieza</td></tr>
+</table></div>
+
+<h3>Macros del marco de pruebas</h3>
+
+<div class="tw"><table>
+<tr><th style="width:250px">Macro</th><th>Uso</th></tr>
+<tr><td><code>MT_ASSERT(cond)</code></td><td>Falla si la condición es falsa</td></tr>
+<tr><td><code>MT_ASSERT_EQ(obt, esp)</code></td><td>Falla si los enteros difieren; informa ambos valores</td></tr>
+<tr><td><code>MT_PRUEBA(fn)</code></td><td>Registra y ejecuta una función de prueba</td></tr>
+</table></div>
+
+<!-- ============ ANEXO C ============ -->
+<h2 id="anexoc">Anexo C — Problemas frecuentes</h2>
+
+<div class="tw"><table>
+<tr><th style="width:290px">Síntoma</th><th>Solución</th></tr>
+<tr><td><code>Cannot connect to the Docker daemon</code></td><td>En WSL2 el servicio no arranca solo: <code>sudo service docker start</code></td></tr>
+<tr><td><code>permission denied</code> al usar <code>docker</code></td><td><code>sudo usermod -aG docker $USER</code> y luego <code>newgrp docker</code></td></tr>
+<tr><td><code>bind source path does not exist: /usr/lib/wsl</code></td><td>Anteponga <code>DOCKER_BUILDKIT=0</code> al <code>docker build</code></td></tr>
+<tr><td><code>Emulate Docker CLI using podman</code></td><td>Está usando Podman. Las imágenes requieren el prefijo <code>docker.io/</code></td></tr>
+<tr><td><code>Password authentication is not supported</code></td><td>Use el token de acceso personal como contraseña, no la de su cuenta</td></tr>
+<tr><td><code>Permission denied ... 403</code> con token válido</td><td>El token no tiene el alcance <code>repo</code>, o es <em>fine-grained</em> sin acceso a ese repositorio</td></tr>
+<tr><td><code>Repository not found</code> al publicar</td><td>El repositorio remoto no existe todavía: créelo primero desde <code>github.com/new</code></td></tr>
+<tr><td><code>[rejected] main -&gt; main (fetch first)</code></td><td><code>git pull --rebase origin main</code> y vuelva a publicar</td></tr>
+<tr><td><code>Need to specify how to reconcile divergent branches</code></td><td><code>git config pull.rebase true</code></td></tr>
+<tr><td><code>cannot pull with rebase: You have unstaged changes</code></td><td>Confirme o guarde sus cambios: <code>git add -A &amp;&amp; git commit -m "..."</code>, o bien <code>git stash</code></td></tr>
+<tr><td>El build sale rojo y no encuentra el <code>Makefile</code></td><td>El <em>Script Path</em> debe ser <code>Jenkinsfile</code> y el <code>Makefile</code> debe estar en la raíz del repositorio</td></tr>
+<tr><td>Ninguna rama se construye</td><td>El <em>Branch Specifier</em> debe ser <code>**/*</code>, no <code>**</code></td></tr>
+<tr><td>El disparador automático no funciona</td><td>Jenkins debe leer el <code>Jenkinsfile</code> al menos una vez: lance una construcción manual</td></tr>
+<tr><td>No encuentro el artefacto</td><td>Está en la página del <em>proyecto</em>, bajo <em>Last Successful Artifacts</em>, no en la de cada ejecución</td></tr>
+<tr><td><code>Lightweight checkout support not available</code></td><td>Es un aviso, no un error. Jenkins clona dos veces cuando el especificador usa comodines</td></tr>
+<tr><td><code>missing separator</code> al ejecutar <code>make</code></td><td>Editó el <code>Makefile</code> y reemplazó un tabulador por espacios. Verifique con <code>cat -A Makefile</code></td></tr>
+<tr><td><code>defined but not used</code> en varias funciones de prueba</td><td>Olvidó registrarlas con <code>MT_PRUEBA</code> dentro de <code>main()</code>. Compare <code>grep -c "^static void test_"</code> con <code>grep -c "MT_PRUEBA"</code></td></tr>
+<tr><td><code>cppcheck: could not find or open any of the paths given</code></td><td>Una continuación de línea del <code>Makefile</code> quedó con doble barra. Verifique con <code>cat -A Makefile | grep -A1 cppcheck</code>: debe terminar en <code>\$</code>, no en <code>\\$</code></td></tr>
+<tr><td><code>make: cppcheck: No such file or directory</code></td><td>Falta instalarlo en el anfitrión: <code>sudo apt install -y cppcheck</code></td></tr>
+<tr><td>Las pruebas de checksum fallan sin razón aparente</td><td>Revise <code>CRED_LONGITUD</code> en <code>src/credencial.h</code>: si quedó en 10 o 6 tras el paso 7, restáurelo a <code>8u</code></td></tr>
+<tr><td><code>implicit declaration of function 'strlen'</code></td><td>Falta <code>#include &lt;string.h&gt;</code> al inicio de <code>credencial.c</code></td></tr>
+<tr><td>El puerto 8080 está ocupado</td><td><code>docker ps</code> para ver qué lo usa, y <code>docker stop NOMBRE</code></td></tr>
+<tr><td>Perdí la clave inicial de Jenkins</td><td><code>docker exec jenkins-validador cat /var/jenkins_home/secrets/initialAdminPassword</code></td></tr>
+<tr><td>Salí de <code>nano</code> sin guardar</td><td>Vuelva a abrirlo. Si guardó algo incorrecto: <code>git checkout -- ARCHIVO</code> restaura la última versión confirmada</td></tr>
+</table></div>
+
+<footer>
+  Guía elaborada para el mini-taller sobre integración y entrega continua de software
+  embebido. Todos los comandos fueron verificados sobre el entorno descrito en los
+  requisitos. Su avance se guarda en este navegador.
+</footer>
+
+</main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const BLOCKS = [
+"lsb_release -d            # distribucion\ndocker --version          # 24 o superior\ndocker compose version    # debe decir v2.x\ngit --version\ngcc --version | head -1\nmake --version | head -1\nnano --version | head -1\ncppcheck --version        # se usa en el paso 9\ndf -h $HOME               # al menos 3 GB libres\nss -tlnp | grep 8080      # no debe devolver nada",
+"sudo apt update\nsudo apt install -y build-essential make git curl zip unzip nano cppcheck",
+"sudo apt install -y ca-certificates curl gnupg\nsudo install -m 0755 -d /etc/apt/keyrings\ncurl -fsSL https://download.docker.com/linux/ubuntu/gpg \\\n  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg\nsudo chmod a+r /etc/apt/keyrings/docker.gpg\n\necho \"deb [arch=$(dpkg --print-architecture) \\\nsigned-by=/etc/apt/keyrings/docker.gpg] \\\nhttps://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable\" \\\n  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null\n\nsudo apt update\nsudo apt install -y docker-ce docker-ce-cli containerd.io \\\n                    docker-buildx-plugin docker-compose-plugin",
+"sudo usermod -aG docker $USER\nnewgrp docker\ndocker run --rm hello-world    # debe imprimir un saludo",
+"cat ARCHIVO           # muestra el contenido completo\nless ARCHIVO          # lo muestra pagina por pagina; salga con q\nls -R                 # lista carpetas y subcarpetas\ngrep -n \"TEXTO\" ARCHIVO   # busca y muestra el numero de linea",
+"cd ~\ngit clone https://github.com/Daniiell03/Taller-Jenkins.git material-taller\nmkdir -p ~/validador-ci\ncp -r ~/material-taller/taller-estudiantes/. ~/validador-ci/\nrm -rf ~/material-taller\ncd ~/validador-ci\nls -a",
+"ls /mnt/c/Users/                 # averigue su nombre de usuario\ncd ~\ncp /mnt/c/Users/SU_USUARIO/Downloads/Taller-Jenkins-main.zip .\nunzip -q Taller-Jenkins-main.zip\nmkdir -p ~/validador-ci\ncp -r Taller-Jenkins-main/taller-estudiantes/. ~/validador-ci/\nrm -rf Taller-Jenkins-main.zip Taller-Jenkins-main\ncd ~/validador-ci\nls -a",
+"cd ~/validador-ci\nls -R\ncat src/credencial.h\ncat src/credencial.c\ncat tests/test_credencial.c\ncat Jenkinsfile\ncat docker/Dockerfile",
+"make\nmake clean\nmake test",
+"cd ~/validador-ci/docker\nDOCKER_BUILDKIT=0 docker build -t jenkins-validador:v1 .\ndocker compose up -d --no-build\ndocker compose ps",
+"cat ~/validador-ci/docker/Dockerfile",
+"docker exec jenkins-validador bash -c \\\n  \"gcc --version | head -1; make --version | head -1; cppcheck --version\"",
+"docker exec jenkins-validador \\\n    cat /var/jenkins_home/secrets/initialAdminPassword",
+"explorer.exe \"http://localhost:8080\"",
+"cd ~/validador-ci\ngit init\ngit branch -M main\ngit config user.name  \"Su Nombre\"\ngit config user.email \"su-correo@ejemplo.com\"\ngit config pull.rebase true\ngit add .\ngit status --short\ngit commit -m \"Material inicial del taller\"\ngit remote add origin https://github.com/USUARIO-A/validador-credenciales.git\ngit push -u origin main",
+"cd ~\nrm -rf ~/validador-ci\ngit clone https://github.com/USUARIO-A/validador-credenciales.git validador-ci\ncd validador-ci\ngit config user.name  \"Su Nombre\"\ngit config user.email \"su-correo@ejemplo.com\"\ngit config pull.rebase true\nls -a",
+"cd ~/validador-ci\ngit checkout main && git pull\ngit checkout -b implementacion-formato\nnano src/credencial.c",
+"int cred_formato_valido(const char *uid)\n{\n    size_t i;\n\n    if (uid == NULL) {\n        return 0;\n    }\n    if (strlen(uid) != CRED_LONGITUD) {\n        return 0;\n    }\n    for (i = 0u; i < CRED_LONGITUD; ++i) {\n        if (uid[i] < '0' || uid[i] > '9') {\n            return 0;\n        }\n    }\n    return 1;\n}\n\nint cred_checksum(const char *uid)\n{\n    size_t i;\n    int suma = 0;\n\n    if (!cred_formato_valido(uid)) {\n        return -1;\n    }\n    for (i = 0u; i < CRED_LONGITUD - 1u; ++i) {\n        suma += uid[i] - '0';\n    }\n    return suma % 10;\n}",
+"make clean && make test\ngit add src/credencial.c\ngit commit -m \"Implementa validacion de formato y checksum\"\ngit push -u origin implementacion-formato",
+"cd ~/validador-ci\ngit checkout main && git pull\ngit checkout -b pruebas-formato\nnano tests/test_credencial.c",
+"static void test_formato_rechaza_corta(void)\n{\n    MT_ASSERT_EQ(cred_formato_valido(\"1234567\"), 0);\n}\n\nstatic void test_formato_rechaza_larga(void)\n{\n    MT_ASSERT_EQ(cred_formato_valido(\"123456789\"), 0);\n}\n\nstatic void test_formato_rechaza_letra(void)\n{\n    MT_ASSERT_EQ(cred_formato_valido(\"1234567A\"), 0);\n}\n\nstatic void test_formato_rechaza_nulo(void)\n{\n    MT_ASSERT_EQ(cred_formato_valido(NULL), 0);\n}\n\nstatic void test_checksum_suma_modulo_diez(void)\n{\n    MT_ASSERT_EQ(cred_checksum(\"12345678\"), 8);\n}\n\nstatic void test_checksum_suma_pequena(void)\n{\n    MT_ASSERT_EQ(cred_checksum(\"11111117\"), 7);\n}\n\nstatic void test_checksum_rechaza_invalida(void)\n{\n    MT_ASSERT_EQ(cred_checksum(\"1234567A\"), -1);\n}",
+"    MT_PRUEBA(test_formato_rechaza_corta);\n    MT_PRUEBA(test_formato_rechaza_larga);\n    MT_PRUEBA(test_formato_rechaza_letra);\n    MT_PRUEBA(test_formato_rechaza_nulo);\n    MT_PRUEBA(test_checksum_suma_modulo_diez);\n    MT_PRUEBA(test_checksum_suma_pequena);\n    MT_PRUEBA(test_checksum_rechaza_invalida);",
+"make clean && make test\ngit add tests/test_credencial.c\ngit commit -m \"Agrega pruebas de formato y checksum\"\ngit push -u origin pruebas-formato",
+"cd ~/validador-ci\ngit checkout main\ngit pull\nmake clean && make test",
+"cd ~/validador-ci\ngit checkout main && git pull\ngit checkout -b uid-largo\nsed -i 's/#define CRED_LONGITUD   8u/#define CRED_LONGITUD  10u/' src/credencial.h\ngrep CRED_LONGITUD src/credencial.h\ngit commit -am \"Amplia el UID a 10 digitos\"\ngit push -u origin uid-largo",
+"cd ~/validador-ci\ngit checkout main && git pull\ngit checkout -b uid-corto\nsed -i 's/#define CRED_LONGITUD   8u/#define CRED_LONGITUD   6u/' src/credencial.h\ngrep CRED_LONGITUD src/credencial.h\ngit commit -am \"Reduce el UID a 6 digitos\"\ngit push -u origin uid-corto",
+"cd ~/validador-ci\ngit checkout main && git pull\ngrep CRED_LONGITUD src/credencial.h\nsed -i 's/#define CRED_LONGITUD.*$/#define CRED_LONGITUD   8u/' src/credencial.h\ngrep CRED_LONGITUD src/credencial.h\nmake clean && make test\ngit commit -am \"Restaura la longitud del UID a 8 digitos\"\ngit push",
+"cd ~/validador-ci\ngit checkout main && git pull\ngit checkout -b implementacion-autorizar\nnano src/credencial.c",
+"cred_resultado_t cred_autorizar(const char *uid,\n                                const char *permitidas[],\n                                size_t n)\n{\n    size_t i;\n    int digito;\n\n    /* 1. formato */\n    if (!cred_formato_valido(uid)) {\n        return CRED_ERR_FORMATO;\n    }\n\n    /* 2. checksum: el ultimo digito debe coincidir */\n    digito = cred_checksum(uid);\n    if (digito < 0 || uid[CRED_LONGITUD - 1u] - '0' != digito) {\n        return CRED_ERR_CHECKSUM;\n    }\n\n    /* 3. lista de permitidas */\n    if (permitidas == NULL) {\n        return CRED_ERR_NO_AUTORIZADA;\n    }\n    for (i = 0u; i < n; ++i) {\n        if (permitidas[i] != NULL && strcmp(uid, permitidas[i]) == 0) {\n            return CRED_OK;\n        }\n    }\n    return CRED_ERR_NO_AUTORIZADA;\n}",
+"make clean && make all\n./build/bin/validador-credenciales\nmake test\ngit add src/credencial.c\ngit commit -m \"Implementa la autorizacion de credenciales\"\ngit push -u origin implementacion-autorizar",
+"cd ~/validador-ci\ngit checkout main && git pull\ngit checkout -b pruebas-autorizar\nnano tests/test_credencial.c",
+"static const char *PERMITIDAS[] = {\n    \"12345678\",\n    \"20250010\"\n};\n\nstatic void test_autoriza_credencial_valida(void)\n{\n    MT_ASSERT_EQ(cred_autorizar(\"12345678\", PERMITIDAS, 2), CRED_OK);\n}\n\nstatic void test_rechaza_formato_invalido(void)\n{\n    MT_ASSERT_EQ(cred_autorizar(\"1234567A\", PERMITIDAS, 2),\n                 CRED_ERR_FORMATO);\n}\n\nstatic void test_rechaza_checksum_erroneo(void)\n{\n    MT_ASSERT_EQ(cred_autorizar(\"12345670\", PERMITIDAS, 2),\n                 CRED_ERR_CHECKSUM);\n}\n\nstatic void test_rechaza_no_autorizada(void)\n{\n    MT_ASSERT_EQ(cred_autorizar(\"11111117\", PERMITIDAS, 2),\n                 CRED_ERR_NO_AUTORIZADA);\n}\n\nstatic void test_formato_gana_al_orden(void)\n{\n    MT_ASSERT_EQ(cred_autorizar(\"ABC\", PERMITIDAS, 2),\n                 CRED_ERR_FORMATO);\n}\n\nstatic void test_lista_vacia_no_autoriza(void)\n{\n    MT_ASSERT_EQ(cred_autorizar(\"12345678\", NULL, 0),\n                 CRED_ERR_NO_AUTORIZADA);\n}",
+"    MT_PRUEBA(test_autoriza_credencial_valida);\n    MT_PRUEBA(test_rechaza_formato_invalido);\n    MT_PRUEBA(test_rechaza_checksum_erroneo);\n    MT_PRUEBA(test_rechaza_no_autorizada);\n    MT_PRUEBA(test_formato_gana_al_orden);\n    MT_PRUEBA(test_lista_vacia_no_autoriza);",
+"make clean && make test\ngit add tests/test_credencial.c\ngit commit -m \"Agrega pruebas de autorizacion\"\ngit push -u origin pruebas-autorizar",
+"cd ~/validador-ci\ngit checkout main && git pull\nmake analyze\ngit checkout -b pipeline-analisis\nnano Jenkinsfile",
+"        stage(\"Analizar\") {\n            steps {\n                sh \"make analyze\"\n            }\n        }",
+"grep -n \"stage(\" Jenkinsfile\ngit add Jenkinsfile\ngit commit -m \"Agrega etapa de analisis estatico al pipeline\"\ngit push -u origin pipeline-analisis",
+"cd ~/validador-ci\ngit checkout main && git pull\ngit checkout -b experimento-roto\nsed -i 's/return suma % 10;/return suma % 9;/' src/credencial.c\ngrep -n \"suma %\" src/credencial.c\nmake clean && make test\ngit commit -am \"Experimento: cambia el modulo del checksum\"\ngit push -u origin experimento-roto",
+"git checkout main\ngit push origin --delete experimento-roto\ngit branch -D experimento-roto\ngit branch -a",
+"cd ~/validador-ci\ncat docker/Dockerfile           # entorno de construccion\ncat docker/docker-compose.yml   # servicio y volumen persistente\ncat docker/plugins.txt          # complementos precargados\ncat Makefile                    # objetivos de construccion\ncat Jenkinsfile                 # definicion del pipeline",
+"FROM jenkins/jenkins:lts-jdk21\n\nUSER root\n\nRUN apt-get update \\\n && apt-get install -y --no-install-recommends \\\n      build-essential \\\n      make \\\n      file \\\n      git \\\n      cppcheck \\\n && rm -rf /var/lib/apt/lists/*\n\nENV JAVA_OPTS=\"-Duser.timezone=America/Costa_Rica\"\n\nCOPY plugins.txt /usr/share/jenkins/ref/plugins.txt\nRUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt\n\nUSER jenkins",
+"grep -c \"^static void test_\" tests/test_credencial.c   # funciones escritas\ngrep -c \"MT_PRUEBA\" tests/test_credencial.c            # registros: debe dar igual",
+"cd ~/validador-ci\ngit checkout main && git pull\ngrep CRED_LONGITUD src/credencial.h\nmake clean && make test"
+];
+
+function soloComandos(raw){
+  return raw.split('\n')
+    .map(l=>{
+      const i = l.indexOf('#');
+      if(i === 0) return '';
+      if(i > 0 && !l.slice(0,i).includes('"')) return l.slice(0,i).trimEnd();
+      return l;
+    })
+    .filter(l=>{
+      const s = l.trim();
+      if(s === '') return false;
+      if(s.startsWith('>')) return false;
+      return true;
+    })
+    .join('\n');
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._h);
+  t._h = setTimeout(()=>t.classList.remove('on'), 1500);
+}
+
+function copiar(txt, btn, msg){
+  const listo = ()=>{
+    btn.classList.add('ok');
+    const o = btn.textContent; btn.textContent = 'Copiado';
+    setTimeout(()=>{btn.classList.remove('ok'); btn.textContent = o;}, 1300);
+    toast(msg);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(listo).catch(()=>respaldo(txt, listo));
+  } else { respaldo(txt, listo); }
+}
+
+function respaldo(txt, listo){
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); listo(); }
+  catch(e){ toast('No se pudo copiar'); }
+  document.body.removeChild(ta);
+}
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('.cp');
+  if(!b) return;
+  const raw = BLOCKS[+b.dataset.i];
+  if(raw === undefined){ toast('Bloque no disponible'); return; }
+  if(b.classList.contains('clean')) copiar(soloComandos(raw), b, 'Comandos copiados');
+  else copiar(raw, b, 'Bloque copiado');
+});
+
+const CLAVE = 'taller-jenkins-avance';
+function cargarAvance(){
+  let d = {};
+  try { d = JSON.parse(localStorage.getItem(CLAVE) || '{}'); } catch(e){ d = {}; }
+  document.querySelectorAll('.chk input').forEach(c=>{ if(d[c.id]) c.checked = true; });
+  actualizarProgreso();
+}
+function guardarAvance(){
+  const d = {};
+  document.querySelectorAll('.chk input').forEach(c=>{ if(c.checked) d[c.id] = 1; });
+  try { localStorage.setItem(CLAVE, JSON.stringify(d)); } catch(e){}
+}
+function actualizarProgreso(){
+  const p = document.getElementById('prog');
+  if(!p) return;
+  const t = [...document.querySelectorAll('.chk input')].filter(c=>c.id.startsWith('s'));
+  const n = t.filter(c=>c.checked).length;
+  p.textContent = n + ' de ' + t.length + ' completados';
+}
+document.addEventListener('change', e=>{
+  if(e.target.matches('.chk input')){ guardarAvance(); actualizarProgreso(); }
+});
+cargarAvance();
+
+const enlaces = [...document.querySelectorAll('nav a')];
+const mapa = new Map(enlaces.map(a=>[a.getAttribute('href').slice(1), a]));
+const obs = new IntersectionObserver(es=>{
+  es.forEach(en=>{
+    if(en.isIntersecting){
+      enlaces.forEach(a=>a.classList.remove('active'));
+      const a = mapa.get(en.target.id);
+      if(a) a.classList.add('active');
+    }
+  });
+}, {rootMargin:'0px 0px -72% 0px'});
+document.querySelectorAll('[id]').forEach(h=>{ if(mapa.has(h.id)) obs.observe(h); });
+
+const bt = document.getElementById('theme');
+try {
+  const g = localStorage.getItem('taller-tema');
+  if(g) document.documentElement.setAttribute('data-theme', g);
+} catch(e){}
+bt.addEventListener('click', ()=>{
+  const act = document.documentElement.getAttribute('data-theme');
+  const oscuro = act ? act === 'dark'
+    : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const nuevo = oscuro ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nuevo);
+  try { localStorage.setItem('taller-tema', nuevo); } catch(e){}
+});
+</script>
+
+</body>
+</html>
